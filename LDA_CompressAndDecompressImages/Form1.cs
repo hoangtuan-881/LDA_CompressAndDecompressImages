@@ -8,34 +8,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Diagnostics; // For Stopwatch
-using System.IO; // <<< THÊM USING NÀY ĐỂ LÀM VIỆC VỚI FILE/FOLDER
+using System.Diagnostics;
+using System.IO;
+using Accord.MachineLearning;
+using Accord.Statistics.Analysis;
+using Accord.Math;
+using Accord.Math.Distances;
 
-// Accord.NET specific namespaces
-// Make sure you have installed the following NuGet packages:
-// Accord.MachineLearning, Accord.Statistics, Accord.Math, Accord.Imaging
-//using Accord.Imaging; // For Image utilities like Blockmatching (though we implement manually here)
-using Accord.MachineLearning; // For KMeans
-using Accord.Statistics.Analysis; // For LDA
-using Accord.Math; // For matrix/vector operations
-using Accord.Math.Distances; // For KMeans distance
-
-namespace ldaimage // Make sure this matches your project name
+namespace ldaimage
 {
     public partial class Form1 : Form
     {
         Bitmap originalBitmap = null;
         Bitmap grayscaleBitmap = null;
-        string originalFilePath = null; // <<< THÊM BIẾN LƯU ĐƯỜNG DẪN FILE GỐC
-
-        // Store results between steps if needed (or process sequentially)
-        // These member variables are currently not assigned back after processing,
-        // but could be if needed for other operations.
-        // List<double[]> blockVectors = null;
-        // int[] clusterLabels = null;
-        // LinearDiscriminantAnalysis lda = null;
-        // double[][] projectedVectors = null;
-
+        string originalFilePath = null;
         public Form1()
         {
             InitializeComponent();
@@ -48,70 +34,45 @@ namespace ldaimage // Make sure this matches your project name
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
-            ofd.Title = "Select an Image File"; // Thêm tiêu đề cho rõ ràng
-
-            // --- Phần sửa đổi ---
+            ofd.Title = "Select an Image File"; 
             try
             {
-                // Lấy đường dẫn thư mục chạy ứng dụng (thường là bin/Debug hoặc bin/Release)
                 string startupPath = AppDomain.CurrentDomain.BaseDirectory;
-                // Kết hợp với tên thư mục "input"
                 string inputDirPath = Path.Combine(startupPath, "input");
-
-                // Kiểm tra xem thư mục "input" có tồn tại không
                 if (Directory.Exists(inputDirPath))
                 {
-                    // Nếu tồn tại, đặt làm thư mục khởi đầu cho OpenFileDialog
                     ofd.InitialDirectory = inputDirPath;
                 }
                 else
                 {
-                    // Thông báo (tùy chọn) nếu không tìm thấy thư mục "input"
                     Console.WriteLine($"Warning: Input directory not found at '{inputDirPath}'. Using default.");
-                    // Bạn có thể đặt một thư mục mặc định khác ở đây nếu muốn, ví dụ:
                     // ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
                 }
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi nếu có vấn đề khi lấy đường dẫn (ít khi xảy ra)
                 Console.WriteLine($"Error determining initial directory: {ex.Message}");
             }
-            // --- Hết phần sửa đổi ---
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    // Giải phóng tài nguyên cũ một cách an toàn
-                    // Nên giải phóng Image của PictureBox trước khi giải phóng Bitmap gốc của nó
                     pictureBoxOriginal.Image?.Dispose();
                     pictureBoxReconstructed.Image?.Dispose();
                     originalBitmap?.Dispose();
                     grayscaleBitmap?.Dispose();
 
-                    // Tải ảnh mới
-                    // Sử dụng using để đảm bảo Bitmap tạm thời được giải phóng ngay cả khi có lỗi
                     using (Bitmap tempBitmap = new Bitmap(ofd.FileName))
                     {
-                        // Tạo bản sao để tránh khóa file gốc
                         originalBitmap = new Bitmap(tempBitmap);
                     }
 
-                    // Hiển thị ảnh gốc (tạo bản sao mới cho PictureBox để tránh xung đột Dispose)
                     pictureBoxOriginal.Image = new Bitmap(originalBitmap);
-
-                    // Lưu đường dẫn file gốc
                     this.originalFilePath = ofd.FileName;
-
-                    // Cập nhật trạng thái
                     lblStatus.Text = $"Loaded: {Path.GetFileName(ofd.FileName)}";
-
-                    // Chuyển đổi sang ảnh xám
-                    grayscaleBitmap = ConvertToGrayscale(originalBitmap); // Đảm bảo hàm này xử lý lỗi nếu có
-
-                    // Xóa ảnh đã tái tạo cũ (nếu có)
-                    pictureBoxReconstructed.Image = null; // Dispose đã được gọi ở trên
+                    grayscaleBitmap = ConvertToGrayscale(originalBitmap);
+                    pictureBoxReconstructed.Image = null;
 
                     lblStatus.Text = "Image loaded. Ready to process.";
                 }
@@ -243,71 +204,52 @@ namespace ldaimage // Make sure this matches your project name
                     UpdateStatus("Reconstruction from centroids complete.", 95);
                     return rebuiltBitmap;
 
-                }); // End Task.Run
+                });
 
                 stopwatch.Stop();
-
-                // --- Hiển thị kết quả ---
                 if (reconstructedImage != null)
                 {
                     pictureBoxReconstructed.Image = reconstructedImage;
                     string statusMsg = $"Finished (Reconstructed from K-Means centroids) in {stopwatch.Elapsed.TotalSeconds:F2}s.";
 
 
-                    if (!string.IsNullOrEmpty(originalFilePath)) // Chỉ lưu nếu có đường dẫn file gốc
+                    if (!string.IsNullOrEmpty(originalFilePath))
                     {
                         try
                         {
-                            // Tạo đường dẫn thư mục output (cùng cấp file exe)
                             //string outputDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output");
-                            // Tạo thư mục nếu chưa có
                             //Directory.CreateDirectory(outputDirectory);
 
-                            // --- Lấy đường dẫn thư mục cha của thư mục dự án (đi lên 3 cấp từ BaseDirectory) ---
                             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                             DirectoryInfo binDirInfo = Directory.GetParent(baseDirectory);
                             DirectoryInfo projectDirInfo = binDirInfo?.Parent;
                             DirectoryInfo parentOfProjectDirInfo = projectDirInfo?.Parent;
 
-                            string outputDirectory; // Khai báo bên ngoài
-
-                            // Ưu tiên lưu vào thư mục cha của thư mục dự án (thường là thư mục Solution)
+                            string outputDirectory;
                             if (parentOfProjectDirInfo != null && parentOfProjectDirInfo.Exists)
                             {
                                 outputDirectory = Path.Combine(parentOfProjectDirInfo.FullName, "output");
                             }
-                            // Nếu không được, thử lưu vào thư mục dự án
                             else if (projectDirInfo != null && projectDirInfo.Exists)
                             {
                                 outputDirectory = Path.Combine(projectDirInfo.FullName, "output");
                                 Debug.WriteLine("Warning: Could not determine parent of project directory. Saving to project directory instead.");
                             }
-                            // Nếu vẫn không được, quay lại lưu vào thư mục base (bin\Debug)
                             else
                             {
                                 outputDirectory = Path.Combine(baseDirectory, "output");
                                 Debug.WriteLine("Warning: Could not determine project or parent directory. Saving to base directory instead.");
                             }
 
-                            // Tạo thư mục output nếu nó chưa tồn tại
                             Directory.CreateDirectory(outputDirectory);
-
-                            // Lấy tên file gốc không có phần mở rộng
                             string originalFileName = Path.GetFileNameWithoutExtension(originalFilePath);
-                            // Tạo tên file mới (thêm tham số K và BlockSize)
                             string outputFileName = $"{originalFileName}_reconstructed_k{k}_b{blockSize}.png";
-                            // Tạo đường dẫn file đầy đủ
                             string outputFilePath = Path.Combine(outputDirectory, outputFileName);
-
-                            // Lưu ảnh với định dạng PNG
                             reconstructedImage.Save(outputFilePath, ImageFormat.Png);
-
-                            // Cập nhật trạng thái bao gồm thông tin đã lưu
                             statusMsg += $" | Saved: output\\{outputFileName}";
                         }
                         catch (Exception ex)
                         {
-                            // Thông báo lỗi nếu không lưu được
                             MessageBox.Show($"Failed to save reconstructed image:\n{ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             statusMsg += $" | Save failed!";
                         }
@@ -317,7 +259,6 @@ namespace ldaimage // Make sure this matches your project name
                         statusMsg += " | Save skipped (no original path)";
                         Debug.WriteLine("Original file path not available, cannot save reconstructed image automatically.");
                     }
-                    // Cập nhật label trạng thái cuối cùng
                     lblStatus.Text = statusMsg;
 
                 }
@@ -409,12 +350,12 @@ namespace ldaimage // Make sure this matches your project name
 
             if (temp32bpp != null)
             {
-                temp32bpp.UnlockBits(originalData); // Unlock temp32bpp nếu nó được sử dụng
+                temp32bpp.UnlockBits(originalData);
                 temp32bpp.Dispose();
             }
             else
             {
-                original.UnlockBits(originalData); // Unlock original nếu nó được sử dụng trực tiếp
+                original.UnlockBits(originalData);
             }
             gray.UnlockBits(grayData);
 
