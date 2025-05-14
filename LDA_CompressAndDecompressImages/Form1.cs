@@ -47,6 +47,7 @@ namespace ldaimage
                 {
                     Console.WriteLine($"Cảnh báo: Không tìm thấy thư mục đầu vào tại '{inputDirPath}'. Sử dụng thư mục mặc định.");
                     // ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                    //
                 }
             }
             catch (Exception ex)
