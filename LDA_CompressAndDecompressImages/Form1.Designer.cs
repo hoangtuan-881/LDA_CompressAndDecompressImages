@@ -49,23 +49,23 @@
             // 
             // btnLoad
             // 
-            this.btnLoad.Location = new System.Drawing.Point(12, 12);
+            this.btnLoad.Location = new System.Drawing.Point(12, 11);
             this.btnLoad.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnLoad.Name = "btnLoad";
             this.btnLoad.Size = new System.Drawing.Size(75, 23);
             this.btnLoad.TabIndex = 0;
-            this.btnLoad.Text = "Load Image";
+            this.btnLoad.Text = "Tải ảnh";
             this.btnLoad.UseVisualStyleBackColor = true;
             this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
             // 
             // btnProcess
             // 
-            this.btnProcess.Location = new System.Drawing.Point(93, 12);
+            this.btnProcess.Location = new System.Drawing.Point(93, 11);
             this.btnProcess.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnProcess.Name = "btnProcess";
             this.btnProcess.Size = new System.Drawing.Size(273, 23);
             this.btnProcess.TabIndex = 1;
-            this.btnProcess.Text = "Process (Cluster+LDA+Reconstruct)";
+            this.btnProcess.Text = "Xử lý (Phân cụm+LDA+Tái tạo)";
             this.btnProcess.UseVisualStyleBackColor = true;
             this.btnProcess.Click += new System.EventHandler(this.btnProcess_Click);
             // 
@@ -102,7 +102,7 @@
             // 
             // numBlockSize
             // 
-            this.numBlockSize.Location = new System.Drawing.Point(99, 41);
+            this.numBlockSize.Location = new System.Drawing.Point(217, 41);
             this.numBlockSize.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.numBlockSize.Minimum = new decimal(new int[] {
             2,
@@ -120,7 +120,7 @@
             // 
             // numClustersK
             // 
-            this.numClustersK.Location = new System.Drawing.Point(172, 70);
+            this.numClustersK.Location = new System.Drawing.Point(217, 71);
             this.numClustersK.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.numClustersK.Minimum = new decimal(new int[] {
             2,
@@ -138,7 +138,7 @@
             // 
             // numLdaComponents
             // 
-            this.numLdaComponents.Location = new System.Drawing.Point(208, 102);
+            this.numLdaComponents.Location = new System.Drawing.Point(217, 103);
             this.numLdaComponents.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.numLdaComponents.Minimum = new decimal(new int[] {
             1,
@@ -159,27 +159,27 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(13, 43);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(73, 16);
+            this.label1.Size = new System.Drawing.Size(98, 16);
             this.label1.TabIndex = 8;
-            this.label1.Text = "Block Size:";
+            this.label1.Text = "Kích thước khối:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(13, 73);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(142, 16);
+            this.label2.Size = new System.Drawing.Size(110, 16);
             this.label2.TabIndex = 9;
-            this.label2.Text = "Number of Clusters (K):";
+            this.label2.Text = "Số lượng cụm (K):";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(13, 105);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(173, 16);
+            this.label3.Size = new System.Drawing.Size(168, 16);
             this.label3.TabIndex = 10;
-            this.label3.Text = "LDA Components (d <= K-1):";
+            this.label3.Text = "Thành phần LDA (d <= K-1):";
             // 
             // progressBar
             // 

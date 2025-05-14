@@ -34,7 +34,7 @@ namespace ldaimage
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
-            ofd.Title = "Select an Image File"; 
+            ofd.Title = "Chọn tập tin hình ảnh"; 
             try
             {
                 string startupPath = AppDomain.CurrentDomain.BaseDirectory;
@@ -45,13 +45,13 @@ namespace ldaimage
                 }
                 else
                 {
-                    Console.WriteLine($"Warning: Input directory not found at '{inputDirPath}'. Using default.");
+                    Console.WriteLine($"Cảnh báo: Không tìm thấy thư mục đầu vào tại '{inputDirPath}'. Sử dụng thư mục mặc định.");
                     // ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error determining initial directory: {ex.Message}");
+                Console.WriteLine($"Lỗi khi xác định thư mục ban đầu: {ex.Message}");
             }
 
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -70,15 +70,15 @@ namespace ldaimage
 
                     pictureBoxOriginal.Image = new Bitmap(originalBitmap);
                     this.originalFilePath = ofd.FileName;
-                    lblStatus.Text = $"Loaded: {Path.GetFileName(ofd.FileName)}";
+                    lblStatus.Text = $"Đã tải: {Path.GetFileName(ofd.FileName)}";
                     grayscaleBitmap = ConvertToGrayscale(originalBitmap);
                     pictureBoxReconstructed.Image = null;
 
-                    lblStatus.Text = "Image loaded. Ready to process.";
+                    lblStatus.Text = "Ảnh đã được tải. Sẵn sàng để xử lý.";
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error loading or processing image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Lỗi khi tải hoặc xử lý hình ảnh: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     pictureBoxOriginal.Image?.Dispose();
                     pictureBoxReconstructed.Image?.Dispose();
@@ -89,7 +89,7 @@ namespace ldaimage
                     grayscaleBitmap = null;
                     pictureBoxOriginal.Image = null;
                     pictureBoxReconstructed.Image = null;
-                    lblStatus.Text = "Failed to load image.";
+                    lblStatus.Text = "Tải hình ảnh thất bại.";
                     this.originalFilePath = null;
                 }
             }
@@ -99,7 +99,7 @@ namespace ldaimage
         {
             if (grayscaleBitmap == null)
             {
-                MessageBox.Show("Please load an image first.", "No Image", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng tải hình ảnh trước.", "Chưa có ảnh", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -109,20 +109,20 @@ namespace ldaimage
 
             if (ldaComponents >= k)
             {
-                MessageBox.Show($"Number of LDA components (d={ldaComponents}) must be less than K (K={k}).\nPlease set d < K.",
-                                "Invalid Parameters", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Số lượng thành phần LDA (d={ldaComponents}) phải nhỏ hơn K (K={k}).\nVui lòng đặt d < K.",
+                                "Tham số không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (blockSize <= 0 || blockSize > grayscaleBitmap.Width || blockSize > grayscaleBitmap.Height)
             {
-                MessageBox.Show("Invalid Block size.", "Invalid Parameters", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Kích thước khối không hợp lệ.", "ham số không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             SetUIEnabled(false);
             progressBar.Visible = true;
             progressBar.Value = 0;
-            lblStatus.Text = "Starting processing...";
+            lblStatus.Text = "Đang bắt đầu xử lý...";
             pictureBoxReconstructed.Image?.Dispose();
             pictureBoxReconstructed.Image = null;
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -133,15 +133,15 @@ namespace ldaimage
             {
                 reconstructedImage = await Task.Run<Bitmap>(() =>
                 {
-                    UpdateStatus("Extracting & Vectorizing Blocks...", 10);
+                    UpdateStatus("Đang trích xuất và vector hóa các khối...", 10);
                     List<double[]> currentBlockVectors = ExtractAndVectorizeBlocks(grayscaleBitmap, blockSize);
-                    if (currentBlockVectors == null || currentBlockVectors.Count == 0) { throw new Exception("Could not extract blocks or no blocks found."); }
-                    if (currentBlockVectors.Count < k) { throw new Exception($"Number of blocks ({currentBlockVectors.Count}) is less than K ({k}). Cannot perform K-Means."); }
+                    if (currentBlockVectors == null || currentBlockVectors.Count == 0) { throw new Exception("Không thể trích xuất các khối hoặc không tìm thấy khối nào."); }
+                    if (currentBlockVectors.Count < k) { throw new Exception($"Số lượng khối ({currentBlockVectors.Count}) nhỏ hơn K ({k}). Không thể thực hiện K-Means."); }
 
                     double[][] dataVectors = currentBlockVectors.ToArray();
                     int vectorDim = dataVectors[0].Length;
 
-                    UpdateStatus($"Running K-Means (K={k})...", 30);
+                    UpdateStatus($"Đang chạy K-Means (K={k})...", 30);
                     KMeans kmeans = new KMeans(k) { Distance = new Accord.Math.Distances.SquareEuclidean(), Tolerance = 0.01 };
                     KMeansClusterCollection clusters = null;
                     int[] currentClusterLabels = null;
@@ -152,21 +152,21 @@ namespace ldaimage
                     }
                     catch (Exception kmeansEx)
                     {
-                        throw new Exception($"K-Means failed: {kmeansEx.Message}", kmeansEx);
+                        throw new Exception($"K-Means thất bại: {kmeansEx.Message}", kmeansEx);
                     }
 
                     if (currentClusterLabels == null || clusters == null || clusters.Centroids == null)
                     {
-                        throw new Exception("K-Means did not produce valid results (labels or centroids).");
+                        throw new Exception("K-Means không tạo ra kết quả hợp lệ (nhãn hoặc tâm cụm).");
                     }
 
                     int distinctLabelsFound = currentClusterLabels.Distinct().Count();
-                    if (distinctLabelsFound == 0) { throw new Exception("K-Means found no distinct clusters."); }
-                    if (distinctLabelsFound < 2) { throw new Exception($"K-Means found only {distinctLabelsFound} distinct cluster(s). LDA requires at least 2."); }
-                    if (ldaComponents >= distinctLabelsFound) { throw new Exception($"Number of LDA components (d={ldaComponents}) must be less than the number of distinct clusters found ({distinctLabelsFound}). Please reduce 'LDA Components' or check K-Means results."); }
+                    if (distinctLabelsFound == 0) { throw new Exception("K-Means không tìm thấy cụm riêng biệt nào."); }
+                    if (distinctLabelsFound < 2) { throw new Exception($"K-Means chỉ tìm thấy {distinctLabelsFound} cụm riêng biệt. LDA yêu cầu ít nhất 2."); }
+                    if (ldaComponents >= distinctLabelsFound) { throw new Exception($"Số lượng thành phần LDA (d={ldaComponents}) phải nhỏ hơn số lượng cụm riêng biệt tìm thấy ({distinctLabelsFound}). Vui lòng giảm 'Thành phần LDA' hoặc kiểm tra kết quả K-Means."); }
 
 
-                    UpdateStatus($"Performing LDA (d={ldaComponents})...", 60);
+                    UpdateStatus($"Đang thực hiện LDA (d={ldaComponents})...", 60);
                     LinearDiscriminantAnalysis currentLda = new LinearDiscriminantAnalysis() { NumberOfOutputs = ldaComponents };
                     try
                     {
@@ -174,14 +174,14 @@ namespace ldaimage
                     }
                     catch (Exception ldaEx)
                     {
-                        throw new Exception($"LDA Learning failed: {ldaEx.Message}...", ldaEx);
+                        throw new Exception($"Học LDA thất bại: {ldaEx.Message}...", ldaEx);
                     }
 
-                    UpdateStatus("Projecting block vectors using LDA...", 75);
+                    UpdateStatus("Đang chiếu các vector khối bằng LDA...", 75);
                     // double[][] currentProjectedVectors = currentLda.Transform(dataVectors);
 
 
-                    UpdateStatus("Reconstructing from K-Means centroids...", 90);
+                    UpdateStatus("Đang tái tạo từ các tâm cụm K-Means...", 90);
                     double[][] reconstructedVectorsFromCentroids = new double[dataVectors.Length][];
                     for (int i = 0; i < dataVectors.Length; i++)
                     {
@@ -192,7 +192,7 @@ namespace ldaimage
                         }
                         else
                         {
-                            Debug.WriteLine($"Warning: Invalid label ({label}) or centroid data for block {i}. Using default (black) vector.");
+                            Debug.WriteLine($"Cảnh báo: Nhãn ({label}) hoặc dữ liệu tâm cụm không hợp lệ cho khối {i}. Sử dụng vector mặc định (đen).");
                             reconstructedVectorsFromCentroids[i] = new double[vectorDim];
                         }
                     }
@@ -201,7 +201,7 @@ namespace ldaimage
                                                                 grayscaleBitmap.Width,
                                                                 grayscaleBitmap.Height,
                                                                 blockSize);
-                    UpdateStatus("Reconstruction from centroids complete.", 95);
+                    UpdateStatus("Hoàn tất tái tạo từ tâm cụm.", 95);
                     return rebuiltBitmap;
 
                 });
@@ -210,7 +210,7 @@ namespace ldaimage
                 if (reconstructedImage != null)
                 {
                     pictureBoxReconstructed.Image = reconstructedImage;
-                    string statusMsg = $"Finished (Reconstructed from K-Means centroids) in {stopwatch.Elapsed.TotalSeconds:F2}s.";
+                    string statusMsg = $"Hoàn thành (Tái tạo từ tâm cụm K-Means) trong {stopwatch.Elapsed.TotalSeconds:F2} giây.";
 
 
                     if (!string.IsNullOrEmpty(originalFilePath))
@@ -233,12 +233,12 @@ namespace ldaimage
                             else if (projectDirInfo != null && projectDirInfo.Exists)
                             {
                                 outputDirectory = Path.Combine(projectDirInfo.FullName, "output");
-                                Debug.WriteLine("Warning: Could not determine parent of project directory. Saving to project directory instead.");
+                                Debug.WriteLine("Cảnh báo: Không thể xác định thư mục cha của thư mục dự án. Lưu vào thư mục dự án thay thế.");
                             }
                             else
                             {
                                 outputDirectory = Path.Combine(baseDirectory, "output");
-                                Debug.WriteLine("Warning: Could not determine project or parent directory. Saving to base directory instead.");
+                                Debug.WriteLine("Cảnh báo: Không thể xác định thư mục dự án hoặc thư mục cha. Lưu vào thư mục gốc thay thế.");
                             }
 
                             Directory.CreateDirectory(outputDirectory);
@@ -246,25 +246,25 @@ namespace ldaimage
                             string outputFileName = $"{originalFileName}_reconstructed_k{k}_b{blockSize}.png";
                             string outputFilePath = Path.Combine(outputDirectory, outputFileName);
                             reconstructedImage.Save(outputFilePath, ImageFormat.Png);
-                            statusMsg += $" | Saved: output\\{outputFileName}";
+                            statusMsg += $" | Đã lưu: output\\{outputFileName}";
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"Failed to save reconstructed image:\n{ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            statusMsg += $" | Save failed!";
+                            MessageBox.Show($"Lưu ảnh tái tạo thất bại:\n{ex.Message}", "Lỗi lưu tệp", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            statusMsg += $" | Lưu thất bại!";
                         }
                     }
                     else
                     {
-                        statusMsg += " | Save skipped (no original path)";
-                        Debug.WriteLine("Original file path not available, cannot save reconstructed image automatically.");
+                        statusMsg += " | Bỏ qua lưu (không có đường dẫn gốc)";
+                        Debug.WriteLine("Đường dẫn tệp gốc không có sẵn, không thể tự động lưu ảnh tái tạo.");
                     }
                     lblStatus.Text = statusMsg;
 
                 }
                 else
                 {
-                    lblStatus.Text = $"Processing finished (LDA applied, reconstruction failed/skipped) in {stopwatch.Elapsed.TotalSeconds:F2} seconds.";
+                    lblStatus.Text = $"Xử lý hoàn tất (đã áp dụng LDA, tái tạo thất bại/bỏ qua) trong {stopwatch.Elapsed.TotalSeconds:F2} giây.";
                 }
             }
             catch (Exception ex)
@@ -277,8 +277,8 @@ namespace ldaimage
                     errorMessage += $"\n -> {inner.Message}";
                     inner = inner.InnerException;
                 }
-                MessageBox.Show($"Error during processing: {errorMessage}\n\nStack Trace (innermost):\n{ex.StackTrace}", "Processing Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblStatus.Text = "Processing failed.";
+                MessageBox.Show($"Lỗi trong quá trình xử lý: {errorMessage}\n\nDấu vết ngăn xếp (trong cùng):\n{ex.StackTrace}", "Lỗi xử lý", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblStatus.Text = "Xử lý thất bại.";
                 pictureBoxReconstructed.Image = null;
             }
             finally
@@ -367,7 +367,7 @@ namespace ldaimage
         {
             if (image.PixelFormat != PixelFormat.Format8bppIndexed)
             {
-                throw new ArgumentException("Internal Error: Image provided to ExtractAndVectorizeBlocks must be 8bpp Indexed grayscale.");
+                throw new ArgumentException("Lỗi nội bộ: Hình ảnh cung cấp cho ExtractAndVectorizeBlocks phải là ảnh xám 8bpp Indexed.");
             }
             List<double[]> vectors = new List<double[]>();
             int vectorLength = blockSize * blockSize;
@@ -411,7 +411,7 @@ namespace ldaimage
         {
             if (reconstructedVectors == null || reconstructedVectors.Length == 0)
             {
-                throw new ArgumentNullException(nameof(reconstructedVectors), "Input vector array is null or empty for rebuilding.");
+                throw new ArgumentNullException(nameof(reconstructedVectors), "Mảng vector đầu vào bị rỗng hoặc trống để tái tạo.");
             }
 
             Bitmap rebuiltImage = new Bitmap(originalWidth, originalHeight, PixelFormat.Format8bppIndexed);
@@ -429,7 +429,7 @@ namespace ldaimage
 
             if (reconstructedVectors.Length != expectedTotalBlocks)
             {
-                System.Diagnostics.Debug.WriteLine($"Warning in RebuildImage: Vector count ({reconstructedVectors.Length}) doesn't match expected block count ({expectedTotalBlocks}). Image might be incomplete.");
+                System.Diagnostics.Debug.WriteLine($"Cảnh báo trong RebuildImage: Số lượng vector ({reconstructedVectors.Length}) không khớp với số lượng khối dự kiến ({expectedTotalBlocks}). Hình ảnh có thể không hoàn chỉnh.");
             }
 
             int blockIndex = 0;
@@ -446,7 +446,7 @@ namespace ldaimage
                         double[] vector = reconstructedVectors[blockIndex];
                         if (vector == null || vector.Length != vectorLength)
                         {
-                            Debug.WriteLine($"Warning in RebuildImage: Vector at index {blockIndex} is null or has incorrect length ({vector?.Length ?? -1}, expected {vectorLength}). Skipping block.");
+                            Debug.WriteLine($"Cảnh báo trong RebuildImage: Vector tại chỉ mục {blockIndex} bị rỗng hoặc có độ dài không chính xác ({(vector == null ? "null" : vector.Length.ToString())}, dự kiến {vectorLength}). Bỏ qua khối.");
                             blockIndex++;
                             continue;
                         }
