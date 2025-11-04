@@ -1,9 +1,21 @@
-# LDA_CompressAndDecompressImages
-Đề tài đồ án: Áp dụng kỹ thuật giảm chiều dữ liệu bằng LDA (Linear Discriminant Analysis) trong nén ảnh và giải nén ảnh.
+LDA_CompressAndDecompressImages
 
-Nội dung:
-- Tìm hiểu về các kỹ thuật LDA trong việc giảm chiều dữ liệu phi tuyến tính.
-- So sánh hiệu suất của LDA và PCA.
-- Viết ứng dụng (có giao diện) nén và giải nén ảnh sử dụng LDA
+Project topic: Apply Linear Discriminant Analysis (LDA) for dimensionality reduction in image compression and decompression.
 
-** Yêu cầu: Tìm hiểu kỹ thuật; Cách thức thực hiện (bằng Toán học); Các ứng dụng thực tế; Code ứng dụng
+Scope:
+
+Study LDA techniques for (nonlinear) dimensionality reduction.
+
+Compare the performance of LDA and PCA.
+
+Build a GUI application to compress and decompress images using LDA.
+
+Requirements:
+
+Research the technique in depth
+
+Mathematical methodology (how it works)
+
+Practical applications
+
+Implementation code (the app)
